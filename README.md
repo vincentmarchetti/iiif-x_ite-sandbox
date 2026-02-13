@@ -1,11 +1,10 @@
+
 # iiif-x_ite-demo
+## edge-growing-bug
 
-IIIF 3D manifest viewer implemented in X_ITE viewer
+This branch illustrates an odd behavior when opening the sandbox page in Edge browser. The left side column, with the x3d-canvas, continues to grow in height after loading the generated 3D scene.
 
-This project is a Single-Page application which renders a Scene as represented in a IIIF Presentation 4 manifest -- in November 2025 Presentation 4  was a specification in development in IIIF.
+To investigate: Does this behavior also occur with a simple X3D scene loaded from static file?
 
-The 3D rendering will be accomplished by building an X3D conforming scenegraph within the X_ITE X3D viewer.
+This may be related to this issue: https://github.com/philipwalton/flexbugs/issues/42
 
-Links:
-- [IIIF 3D Technical Study Group](https://iiif.io/community/groups/3d/)
-- [X_ITE Viewer](https://create3000.github.io/x_ite/)
