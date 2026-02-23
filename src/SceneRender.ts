@@ -114,8 +114,9 @@ export class SceneRender {
         */
         this.scene_x =  await this.browser.createScene();
         
-        this.addNavigationInfo( this.scene_x.rootNodes );
-        this.addBackground( this.scene_x.rootNodes );
+        this.addNavigationInfo(  this.scene_x.rootNodes );
+        this.addDefaultLighting( this.scene_x.rootNodes );
+        this.addBackground(      this.scene_x.rootNodes );
         
         this.scene.annotationPages.forEach( (page:manifesto.AnnotationPage) => {
             this.addAnnotationPage(this.scene_x.rootNodes, page);
@@ -130,7 +131,7 @@ export class SceneRender {
     
     private addNavigationInfo(container):void {
         const navInfo = this.createNode("NavigationInfo");
-        navInfo.headlight = true;
+        navInfo.headlight = new X3D.SFBool(true);
         this.hooks.NavigationInfo = navInfo;
         container.push(navInfo);
     }
@@ -153,6 +154,20 @@ export class SceneRender {
             this.addAnnotation( group.children , anno );
         });
         container.push(group);
+    }
+    
+    private addDefaultLighting(container):void {
+        const directionData = [ [0.0 , -0.81649658, -0.57735027] ,
+                                [-0.5, -0.81649658,  0.28867513],
+                                [+0.5, -0.81649658,  0.28867513]];
+        directionData.forEach( (vec) => {
+            const light = this.createNode("DirectionalLight");
+            light.direction = new X3D.SFVec3f(...vec);
+            light.global =    new X3D.SFBool(true);
+            light.intensity = new X3D.SFFloat(1.0);
+            light.ambientIntensity = new X3D.SFFloat(0.5);
+            container.push(light);        
+        });
     }
     
     private addAnnotation(container, anno:manifesto.Annotation):void {
