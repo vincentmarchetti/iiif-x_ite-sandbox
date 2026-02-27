@@ -26,7 +26,7 @@ import {fetch_manifest_json} from "ManifestViewer/src/fetch_manifest_json.ts";
         -- on user request when manifest text is entered or copied into HTML input
 */
 
-const FALLBACK_MANIFEST_URL="https://spri-open-resources.s3.us-east-2.amazonaws.com/iiif3dtsg/tipped_astronaut/tipped_and_rotated_astronaut.json";
+const FALLBACK_MANIFEST_URL="https://raw.githubusercontent.com/IIIF/3d/refs/heads/main/manifests/3_lights/multiple_lights_with_intensities_and_colors.json";
 async function load_manifest(){
     const data = await ( async () => {
         try{
