@@ -2,10 +2,10 @@ body * {margin-bottom:28;}
 
 #main-title {font-size:14pt;}
 
-#xite-view-container {width:240px; aspect-ratio:  1/1 ;}
+#xite-view-container {width:480px; aspect-ratio:  1/1 ;}
 
 #xite-view-container x3d-canvas {width:100%; height:100%;}
 
 #xite-control * {font-size:12pt;}
 
-.logo-image {height:72px; }
+.logo-image {height:64px; }
