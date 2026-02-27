@@ -1,5 +1,5 @@
 import {manifesto} from "manifesto-prezi4";
-import {Transform, transformsToPlacements, Rotation, Translation, Placement } from "../packages/transforms/dist";
+import {Transform, transformsToPlacements, Rotation, Translation, Placement } from "transforms/src";
 import {Quaternion, Vector3, MathUtils} from "threejs-math";
 
 // Developer Note: Jan 13 2026, import of render_stub_content is strictly a 

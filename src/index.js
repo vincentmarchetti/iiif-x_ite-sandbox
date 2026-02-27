@@ -1,4 +1,4 @@
-require("../../src/x_ite_viewer_setup.js");
+require("ManifestViewer/src/x_ite_viewer_setup.js");
 
 /*
 Developer note 12/17/2025 : manifesto is being brought in here
@@ -11,7 +11,7 @@ but for all I know that's an unintended consequence.
 const manifesto = require("manifesto-prezi4");
 
 
-import {fetch_manifest_json} from "../../src/fetch_manifest_json.ts";
+import {fetch_manifest_json} from "ManifestViewer/src/fetch_manifest_json.ts";
 
 /*
     handle_manifest_json is called when an object has

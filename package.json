@@ -11,9 +11,12 @@
     "clean": "rimraf --verbose dist .parcel-cache"
   },
   "dependencies": {
-    "manifesto-prezi4": "file:./packages/manifesto-prezi4/dist-commonjs"
+    "manifesto-prezi4": "file:./packages/manifesto-prezi4/dist-commonjs",
+    "ManifestViewer": "file:./packages/ManifestViewer",
+    "transforms"    : "file:./packages/transforms"
   },
   "devDependencies": {
-    "parcel": "^2.16.4"
+    "parcel": "^2.16.4",
+    "rimraf": "^6.1.3"
   }
 }
