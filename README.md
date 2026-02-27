@@ -1,3 +1,6 @@
+# development branch
+This branch will refactor the structure so that the webpage code is at, the ManifestViewer code will be in a subpackage. Eventually the ManifestViewer will be spun into a separate github repo and deployed as a submodule; and that is how webpage variants will be supported.
+
 # iiif-x_ite-demo
 
 IIIF 3D manifest viewer implemented in X_ITE viewer
