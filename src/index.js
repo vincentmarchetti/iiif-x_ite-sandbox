@@ -8,7 +8,7 @@ construct an instance of manifesto.Manifest
 It is not intended to put manifesto or its contents into global scope
 but for all I know that's an unintended consequence.
 */
-const manifesto = require("manifesto-prezi4");
+import * as manifesto  from "manifesto-prezi4/src/index.ts" ;
 
 
 import {fetch_manifest_json} from "ManifestViewer/src/fetch_manifest_json.ts";

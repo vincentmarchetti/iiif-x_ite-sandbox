@@ -1,4 +1,4 @@
-import {manifesto} from "manifesto-prezi4";
+import {manifesto} from "manifesto-prezi4/src/index.ts";
 import {SceneRender, SceneHooks } from "./SceneRender.ts";
 
 export {manifesto}
