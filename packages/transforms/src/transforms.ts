@@ -50,7 +50,7 @@ export abstract class Transform{
             return new Translation( new Vector3().fromArray(coords));
         }
 
-        throw new TypeError(`Translate.from_manifesto_transform unsupported: ${t}`);
+        throw new TypeError(`Transform.from_manifesto_transform unsupported: ${t}`);
     }
     
     
