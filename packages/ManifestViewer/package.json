@@ -19,7 +19,5 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "manifesto-prezi4": "file:./packages/manifesto-prezi4/dist-commonjs",
-    "threejs-math": "^0.147.0"
   }
 }
