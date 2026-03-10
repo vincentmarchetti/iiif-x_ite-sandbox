@@ -1,10 +1,10 @@
-import {manifesto} from "manifesto-prezi4/src/index.ts";
+import * as manifesto from "manifesto-prezi4/src/index.ts";
 import {SceneRender, SceneHooks } from "./SceneRender.ts";
 
 export {manifesto}
 export class Manifest3DViewer {
 
-    public readonly browser : any ;
+    public readonly browser : unknown ;
     
     
     public set showAllButton( button:HTMLElement){
@@ -30,11 +30,7 @@ export class Manifest3DViewer {
         console.debug(`created browser: ${this.browser.name}:${this.browser.version}`);
     };
     
-    private findAllScenes( manifest : manifesto.Manifest ):Scene[] {
-        return manifest.getSequences().map( (seq:Sequence):Scene[] =>{
-            return seq.getScenes();
-        }).flat();
-    };
+    
     
     /*
     intention is that this will be the entry point when a manifest is 
@@ -48,13 +44,12 @@ export class Manifest3DViewer {
         /*
         logic is that the first scene will be displayed
         */
-        const allScenes = this.findAllScenes(manifest);
-        if (allScenes.length > 0){
-             await this.renderScene( allScenes[0], manifest);
-        } 
-        else{
+        const scene  : Scene   = manifest.Items.filter( (res) => res.isScene )[0];       
+        if (scene == null){
             console.warn("manifest with no Scene resources");
-        }        
+            return;
+        };
+        await this.renderScene( scene, manifest);  
     };
     
     public async displaySceneById( id : string, manifest: manifesto.Manifest ):void
