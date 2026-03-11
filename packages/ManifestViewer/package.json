@@ -4,7 +4,7 @@
   "description": "prototype of a IIIF 3D manifest viewer using the X-ITE X3D viewer",
   "author": "Vince Marchetti <vmarchetti@kshell.com>",
   "type": "module",
-  "source": "src/index.html",
+  "source": "src/Manifest3dViewer.ts",
   "scripts": {
     "start": "parcel --open",
     "build": "parcel build",
