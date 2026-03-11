@@ -68,7 +68,7 @@ function getTransformsForTarget( resource : manifesto.ManifestResource):Transfor
     }
 };
 
-function thisOrSource(resource: manifesto.ManifestResource):manifesto.ManifestResource{
+function thisOrSource(resource: manifesto.JSONLDResource):manifesto.ManifestResource{
     if (resource.isSpecificResource )
         return resource.getSource();
     return resource;
@@ -141,7 +141,7 @@ export class SceneRender {
         this.addDefaultLighting( this.scene_x.rootNodes );
         this.addBackground(      this.scene_x.rootNodes );
         
-        this.scene.annotationPages.forEach( (page:manifesto.AnnotationPage) => {
+        this.scene.Items.forEach( (page:manifesto.AnnotationPage) => {
             this.addAnnotationPage(this.scene_x.rootNodes, page);
         });
         
@@ -160,7 +160,7 @@ export class SceneRender {
     }
     
     private addBackground(container):void {
-        const rgb = this.scene.getBackgroundColor() ?? this.defaultBackground;
+        const rgb = this.scene.BackgroundColor ?? this.defaultBackground;
                                 
         // convert red, green, blue values of rgn to 
         // floats in range [0.0,1.0]
@@ -173,7 +173,7 @@ export class SceneRender {
     
     private addAnnotationPage(container, page: manifesto.AnnotationPage):void {
         const group  = this.createNode("Group");
-        page.getAnnotations().forEach( (anno:manifesto.Annotation):void => {
+        page.Items.forEach( (anno:manifesto.Annotation):void => {
             this.addAnnotation( group.children , anno );
         });
         container.push(group);
@@ -195,17 +195,21 @@ export class SceneRender {
     
     private addAnnotation(container, anno:manifesto.Annotation):void {
         console.debug(`enter SceneRender.addAnnotation ${anno.id}`);
-        const bodyOrNull = this.chooseBody( anno.getBody());
-        if (bodyOrNull == null) return
         
+        const body:manifesto.JSONLDResource = ( ():manifesto.JSONLDResource =>{
+            const rv: manifesto.JSONLDResource | null = anno.Body;
+            if (rv == null){
+                const msg = `SceneRender.addAnnotation | no body property`;
+                throw new Error(msg);
+            }
+            return rv as manifesto.JSONLDResource
+        })();
         
-        const body:manifesto.ManifestResource = bodyOrNull as manifesto.ManifestResource;
-        expect(body, "SceneRender.addAnnotation  body").to.exist;
         const bodySource:ManifestResource = thisOrSource(body);
-        const target = anno.getTarget();
+        const target = anno.Target;
         
         //if (bodySource instanceof manifesto.Model)
-        if (bodySource.isModel())
+        if (bodySource.isModel )
             return this.addModel(container, anno, body,target);
 
         if (bodySource.isCamera )
@@ -217,8 +221,8 @@ export class SceneRender {
     
     private addModel(   container, 
                         anno : manifesto.Annotation,
-                        body : manifesto.ManifestResource, 
-                        target: manifesto.ManifestResource):void{
+                        body : manifesto.JSONLDResource, 
+                        target: manifesto.JSONLDResource):void{
                         
         const prettyPrint = (tlist:Transform[]):string => {
             const subs = tlist.map( (t:Transform):string =>
