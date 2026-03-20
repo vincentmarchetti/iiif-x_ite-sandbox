@@ -1,8 +1,8 @@
-import * as manifesto from "manifesto-prezi4/src/index.ts";
+import * as manifesto from "@kshell/manifesto-prezi4";
 import {Quaternion, Euler,  IOrder, MathUtils, Vector3} from "threejs-math";
 
 
-type AxesValues = [number, number, number];
+type AxesValues = [number,number,number];
 const AxesNames = ["x", "y", "z"];
 
 
@@ -10,6 +10,7 @@ Vector3.prototype.toString = function(){
     return `Vector3(${this.x}, ${this.y}, ${this.z})`;
 }
 
+/*
 export function extractAxesValues(obj : object, defaultValue:number) : AxesValues{
     return AxesNames.map( (axis_name):number => {
         const c = obj[axis_name];
@@ -17,38 +18,32 @@ export function extractAxesValues(obj : object, defaultValue:number) : AxesValue
         return Number(c);
     }) as AxesValues;
 }
+*/
 
 export abstract class Transform{
 
-    public static from_manifesto_transform(t:manifesto.Transform | manifesto.PointSelector ) : Transform{
-        if (t instanceof manifesto.RotateTransform ){
-            const degreesAngles:AxesValues = extractAxesValues(t.getRotation(), 0.0);
+    public static from_manifesto_transform(t:manifesto.ITransform | manifesto.PointSelector ) : Transform{
+        if ((t as any).isRotateTransform ){
             /*
             Developer Note 1 Jan 2026: Remember that in threejs-math; Euler angles are defined
             as intrinsic rotations and as such are precisely referred to as Tait-Bryan angles
             */
             const order:string='XYZ';
-            const radianValues = degreesAngles.map( MathUtils.degToRad );
-            const eulerArgs:any[] = (radianValues as any[]).concat([order])
-            const euler = new Euler().fromArray( eulerArgs as [number,number,number,IOrder] );
+            const radianValues = (t as manifesto.ITransform).AxesValues.map( MathUtils.degToRad );
+            const eulerArgs = [...radianValues, order] as [number,number,number,IOrder];
+            const euler = new Euler().fromArray( eulerArgs  );
             const quat = new Quaternion().setFromEuler(euler);
             return new Rotation(quat);
         }
         
-        if (t instanceof manifesto.TranslateTransform ){
-            const coords:AxesValues = extractAxesValues(t.getTranslation(), 0.0);
-            return new Translation( new Vector3().fromArray(coords));
+        if ((t as any).isTranslateTransform || (t as any).isPointSelector){
+            return new Translation( new Vector3().fromArray(t.AxesValues));
         }
         
-        if (t instanceof manifesto.ScaleTransform ) {
-            const coords:AxesValues = extractAxesValues(t.getScale(), 1.0);
-            return new Scaling( coords );
+        if ((t as any).isScaleTransform ) {
+            return new Scaling( t.AxesValues as AxesValues );
         }
         
-        if (t instanceof manifesto.PointSelector ) {
-            const coords:AxesValues = extractAxesValues(t.getLocation(), 0.0);
-            return new Translation( new Vector3().fromArray(coords));
-        }
 
         throw new TypeError(`Transform.from_manifesto_transform unsupported: ${t}`);
     }

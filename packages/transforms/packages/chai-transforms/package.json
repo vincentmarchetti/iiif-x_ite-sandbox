@@ -7,7 +7,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --require ./test/setup.js"
   },
   "dependencies": {
     "chai": "^6.2.2",

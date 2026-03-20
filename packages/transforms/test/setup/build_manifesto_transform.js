@@ -1,13 +1,8 @@
-const manifesto = require( "manifesto-prezi4");
-const Vector3 = require("threejs-math").Vector3;
-
-Vector3.prototype.toString =  function(){
-    return `Vector3(${this.x}, ${this.y}, ${this.z})`;
-};
+import * as manifesto from  "@kshell/manifesto-prezi4";
 
 
 
-function T(xv,yv,zv){
+export function T(xv,yv,zv){
     const jsonld = {
         "type" : "TranslateTransform",
         "x"    : xv,
@@ -25,7 +20,7 @@ function T(xv,yv,zv){
     return u;
 };
 
-function R(xv,yv,zv){
+export function R(xv,yv,zv){
     const jsonld = {
         "type" : "RotateTransform",
         "x"    : xv,
@@ -42,7 +37,7 @@ function R(xv,yv,zv){
     return u;
 };
 
-function S(xv,yv,zv){
+export  function S(xv,yv,zv){
     const jsonld = {
         "type" : "ScaleTransform",
         "x"    : xv,
@@ -57,4 +52,4 @@ function S(xv,yv,zv){
     return u;
 };
 
-module.exports = {S,R,T, Vector3};
+//module.exports = {S,R,T, Vector3};

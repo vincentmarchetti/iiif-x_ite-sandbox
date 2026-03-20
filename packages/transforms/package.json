@@ -1,6 +1,9 @@
 {
-  "name": "transforms",
+  "name": "@kshell/transforms",
+  "exports" : "./dist/index.js",
   "version": "1.0.0",
+  "type" : "module",
+  "main" : "./dist/index.js",
   "description": "Code to translate IIIF Transform objects to X3D structures and perform calculations involving nested geometric transformations",
   "keywords": [
     "X3D",
@@ -9,10 +12,8 @@
   "author": "Vincent Marchetti",
   "scripts": {
     "docs": "typedoc",
-    "test": "npm run build:commonjs ; mocha  --require ./test/setup.js",
-    "build:es6": "tsc",
-    "build:commonjs": "tsc --module commonjs --outDir dist-commonjs",
-    "build" : "npm run build:commonjs; npm run build:es6"
+    "test": "npm run build ; mocha --require './test/setup/index.js' ./test/applyToVector3.test.js",
+    "build": "tsc"
   },
   "devDependencies": {
     "chai": "^6.2.1",
