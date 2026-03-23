@@ -330,9 +330,20 @@ export function transformsToPlacements( transforms:Transform[]):Placement[]{
             accum.push( new Placement( t as Scaling) );
             return accum;
         }
-        
         accum[active_index] = t.applyToPlacement( last_placement );
         return accum;
     }, [new Placement()]);
     return retVal;
+}
+
+/*
+    evaluates the Rotation transform required to rotate an "arrow" at location base,
+    and pointing in the -Z direcction, to point at the aimAt location
+    using the procedure specified in Presentation 4
+    with a rotation by extrinsic Euler angles in XYZ order (with Z equal to 0)
+    
+    Returns null in the edge case that base == aimAt (same location)
+*/ 
+export function relativeRotation( base: Translation, aimAt : Translation): Rotation | null {
+    throw new Error(`relativeRotation | not implemented`);
 }
