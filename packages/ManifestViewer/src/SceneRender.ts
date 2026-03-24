@@ -1,5 +1,12 @@
-import {manifesto} from "@kshell/manifesto-prezi4";
-import {Transform, transformsToPlacements, Rotation, Translation, Placement } from "@kshell/transforms";
+import * as manifesto from "@kshell/manifesto-prezi4";
+import {IManifestRender} from "./Manifest3DViewer.js";
+import {Transform, 
+        transformsToPlacements, 
+        Rotation, 
+        Translation, 
+        Placement, 
+        relativeRotation } from "@kshell/transforms";
+
 import {Quaternion, Vector3, MathUtils} from "threejs-math";
 
 // Developer Note: Jan 13 2026, import of render_stub_content is strictly a 
@@ -9,7 +16,7 @@ import {Quaternion, Vector3, MathUtils} from "threejs-math";
 
 
 /*
-Code in this module assumes there is an object X3D in the global context due
+Code in this module assumes there is an object this.manifest_render.x3dLib in the global context due
 to having imported the X_ITE library. This will be sanity-checked in the
 constructor for the SceneRender class
 */
@@ -27,13 +34,21 @@ export interface SceneHooks {
     NavigationInfo : any
 };
 
+type AxesValues = manifesto.AxesValues; // rem: an array of 4 numbers
 
-function getTransformsForBody( resource : manifesto.ManifestResource):Transform[] {
-    if (resource.isSpecificResource ){
-        const transformList :   manifesto.Transform[] = resource.Transform ?? 
-                                ([] as manifesto.Transform[]);
+
+function getTransformsForBody( resource : manifesto.JSONLDResource):Transform[] {
+    if ((resource as any).isSpecificResource ){
+        /*
+        Developer note Mar 23 2026
+        Here is an unfortunate naming quirk. As inherites from the IIIF Presentation 4
+        spec, the property on the manifesto.SpecificResource call Transform is 
+        a list of IIIF Transform resources
+        */
+        const transformList :   manifesto.ITransform[] = (resource as unknown as manifesto.SpecificResource).Transform ?? 
+                                ([] as manifesto.ITransform[]);
         try{
-            return transformList.map( (t:manifesto.Transform, index:number):Transform =>{
+            return transformList.map( (t:manifesto.ITransform, index:number):Transform =>{
                 try{
                     return Transform.from_manifesto_transform(t);
                 }
@@ -48,16 +63,18 @@ function getTransformsForBody( resource : manifesto.ManifestResource):Transform[
             throw new Error(msg);
             // dev note 20260301: following is essentially "ignore bad input"
             // remove as cruft 1 April 2026
-            console.error(msg); return ( [] as Transform[] )
+            console.error(msg); 
+            return ( [] as Transform[] )
         }
     };
     return ( [] as Transform[] );
 };
 
-function getTransformsForTarget( resource : manifesto.ManifestResource):Transform[] {
+function getTransformsForTarget( resource : manifesto.JSONLDResource):Transform[] {
     try{
 
-    const selector = (resource.isSpecificResource && resource.Selector) ?? null;    
+    const selector = (( resource as any).isSpecificResource && 
+                        (resource as unknown as manifesto.SpecificResource).Selector) ?? null;    
     return (( selector?.isPointSelector) && 
             [ Transform.from_manifesto_transform(selector )]) ??
             ( [] as Transform[] );
@@ -69,15 +86,20 @@ function getTransformsForTarget( resource : manifesto.ManifestResource):Transfor
 };
 
 function thisOrSource(resource: manifesto.JSONLDResource):manifesto.ManifestResource{
-    if (resource.isSpecificResource )
-        return resource.getSource();
-    return resource;
+    if ((resource as any).isSpecificResource ) 
+        return (resource as manifesto.SpecificResource).Source as manifesto.ManifestResource;
+    return  resource as unknown as manifesto.ManifestResource;
 }
 
+/*
+Developer Note: Mar 23 2026
+Am calling this class SceneRender just to cut down on the large and disparate
+uses of the term Scene
+*/
 export class SceneRender {
 
-    private readonly browser:any;
-    private readonly scene : manifesto.Scene;
+    private manifest_render : IManifestRender;
+    private scene_properties : manifesto.Scene;
     
     private readonly defaultBackground = {
         red: 236,
@@ -85,36 +107,27 @@ export class SceneRender {
         blue: 236
     };
     
-    /*
-    Developer note: Jan 13 2026 at initial implementation
-    a stored reference to the manifest is being maintained with the
-    thought that it may be needed in the future, but at this
-    stage there is no explicit reason for keeping it.
-    */
-    private readonly manifest : manifesto.Manifest;
     
     private hooks: SceneHooks = {
         NavigationInfo: null
     };
     
-    public constructor( scene : manifesto.Scene, manifest : manifesto.Manifest, browser : any){
-        this.scene =scene;
-        this.manifest = manifest;
-        this.browser = browser;
+    public constructor( scene : manifesto.Scene, manifest_render:IManifestRender){        
+        this.manifest_render = manifest_render;
         
-        if ( X3D == undefined ){
-            throw new Error("global X3D not defined in SceneRender.constuctor");
+        if ( this.manifest_render.x3dLib == undefined ){
+            throw new Error("global this.manifest_render.x3dLib not defined in SceneRender.constuctor");
         }
     };
     
-    private scene_x = null;
+    private scene_x3d: any;
     
     private createNode( tag:string ) {
-        if (this.scene_x == null){
-            throw new Error("SceneRender.createNode: scene_x not initialized");
+        if (this.scene_x3d == null){
+            throw new Error("SceneRender.createNode: scene_node not initialized");
         }
         console.debug(`SceneRender.createNode ${tag}`);
-        return this.scene_x.createNode(tag);
+        return this.scene_x3d.createNode(tag);
     }
     
     /*
@@ -124,28 +137,28 @@ export class SceneRender {
     Clients should call this function asynchrously after constucting the
     SceneRender instance synchronously
     */
-    public async render() : SceneHooks {
-        console.debug( `enter SceneRende.render for scene ${this.scene.id}`);
+    public async render() : Promise<SceneHooks> {
+        console.debug( `enter SceneRende.render for scene ${this.scene_properties.id}`);
         
         /*
         scene_x is a constructed representation of the scenegraph int he X_ITE 
-        context. It is roughly  the Scene element in the X3D as well as the DOM tree. 
-        Strictly, it  it is not an X3D node.
+        context. It is roughly  the Scene element in the this.manifest_render.x3dLib as well as the DOM tree. 
+        Strictly, it  it is not an this.manifest_render.x3dLib node.
         
         Calling it scene_x to avoid confusion with this.scene, the static IIIF resource
         as represented in manifesto
         */
-        this.scene_x =  await this.browser.createScene();
+        this.scene_x3d =  await this.manifest_render.browser.createScene();
         
-        this.addNavigationInfo(  this.scene_x.rootNodes );
-        this.addDefaultLighting( this.scene_x.rootNodes );
-        this.addBackground(      this.scene_x.rootNodes );
+        this.addNavigationInfo(  this.scene_x3d.rootNodes );
+        this.addDefaultLighting( this.scene_x3d.rootNodes );
+        this.addBackground(      this.scene_x3d.rootNodes );
         
-        this.scene.Items.forEach( (page:manifesto.AnnotationPage) => {
-            this.addAnnotationPage(this.scene_x.rootNodes, page);
+        this.scene_properties.Items.forEach( (page:manifesto.AnnotationPage) => {
+            this.addAnnotationPage(this.scene_x3d.rootNodes, page);
         });
         
-        await this.browser.replaceWorld(this.scene_x); 
+        await this.manifest_render.browser.replaceWorld(this.scene_x3d); 
         //await render_stub_content(this.browser);
         
         
@@ -154,20 +167,20 @@ export class SceneRender {
     
     private addNavigationInfo(container):void {
         const navInfo = this.createNode("NavigationInfo");
-        navInfo.headlight = new X3D.SFBool(true);
+        navInfo.headlight = new this.manifest_render.x3dLib.SFBool(true);
         this.hooks.NavigationInfo = navInfo;
         container.push(navInfo);
     }
     
     private addBackground(container):void {
-        const rgb = this.scene.BackgroundColor ?? this.defaultBackground;
+        const rgb = this.scene_properties.BackgroundColor ?? this.defaultBackground;
                                 
         // convert red, green, blue values of rgn to 
         // floats in range [0.0,1.0]
         const values:number[] = [rgb.red, rgb.green, rgb.blue]
                                 .map( (v) => Math.min(Math.round(v/0.255)*0.001, 1.0));
         const backGround = this.createNode("Background");
-        backGround.skyColor = new X3D.MFColor(new X3D.SFColor(...values));
+        backGround.skyColor = new this.manifest_render.x3dLib.MFColor(new this.manifest_render.x3dLib.SFColor(...values));
         container.push(backGround);
     }
     
@@ -185,10 +198,10 @@ export class SceneRender {
                                 [+0.5, -0.81649658,  0.28867513]];
         directionData.forEach( (vec) => {
             const light = this.createNode("DirectionalLight");
-            light.direction = new X3D.SFVec3f(...vec);
-            light.global =    new X3D.SFBool(true);
-            light.intensity = new X3D.SFFloat(1.0);
-            light.ambientIntensity = new X3D.SFFloat(0.5);
+            light.direction = new this.manifest_render.x3dLib.SFVec3f(...vec);
+            light.global =    new this.manifest_render.x3dLib.SFBool(true);
+            light.intensity = new this.manifest_render.x3dLib.SFFloat(1.0);
+            light.ambientIntensity = new this.manifest_render.x3dLib.SFFloat(0.5);
             container.push(light);        
         });
     }
@@ -205,57 +218,50 @@ export class SceneRender {
             return rv as manifesto.JSONLDResource
         })();
         
-        const bodySource:ManifestResource = thisOrSource(body);
+        const bodySource:manifesto.ManifestResource = thisOrSource(body);
         const target = anno.Target;
         
         //if (bodySource instanceof manifesto.Model)
-        if (bodySource.isModel )
-            return this.addModel(container, anno, body,target);
+        if ((bodySource as any).isModel )
+            return this.addModel(container, anno);
 
-        if (bodySource.isCamera )
-            return this.addCamera(container, anno, body, target);
+        if ((bodySource as any).isCamera )
+            return this.addCamera(container, anno);
             
         console.warn(`unsupported body type`);
         return;
     }
     
-    private addModel(   container, 
-                        anno : manifesto.Annotation,
-                        body : manifesto.JSONLDResource, 
-                        target: manifesto.JSONLDResource):void{
-                        
-        const prettyPrint = (tlist:Transform[]):string => {
-            const subs = tlist.map( (t:Transform):string =>
-                {return t.toString();});
-            return subs.join();
-        }
-        
-        const model:manifesto.Model = thisOrSource(body);
+    /*
+    Developer Note Mar 23 2026
+    For code readability this function has been separated into a separate method;
+    but there is a precontract condition that the annotation.body has already been
+    determined to be a model
+    */
+    private addModel(container: any , anno : manifesto.Annotation ):void{
+               
+        // precontract check
+        const model:manifesto.Model = (():manifesto.Model => {
+            const test:any = thisOrSource( anno.Body );
+            if (test == null || ! test.isModel )
+                throw new Error(`SceneRender.addMode: precontract violation: not a model`);
+            return test as manifesto.Model;
+        })();
+             
         console.debug(`adding model ${model.id}`);
         
         const inline = this.createNode("Inline");
-        inline.url = new X3D.MFString([ model.id ]);
+        inline.url = new this.manifest_render.x3dLib.MFString([ model.id ]);
             
-        const net_transforms =  [   ...getTransformsForBody(body),
-                                    ...getTransformsForTarget(target) ];
-        ( (to_console:bool) => {
-            const items:string[] = net_transforms.map((item) => item.toString());
-            const msg:string = `SceneRender.addModel net_transforms: ${items.join()}`;
-            if (to_console) console.debug(msg);
-        })(true);
+        const net_transforms =  [   ...getTransformsForBody(anno.Body),
+                                    ...getTransformsForTarget(anno.Target) ];
                                     
         const placements = transformsToPlacements( net_transforms );
         
-        ( (to_console:bool) => {
-            const items:string[] = placements.map((item) => item.toString());
-            const msg:string = `SceneRender.addModel placements: ${items.join()}`;
-            if (to_console) console.debug(msg);
-        })(true);
-        
         const setTransformNodeField = {
-            "translation"   : ((node, c) => {node.translation = new X3D.SFVec3f(...c);}),
-            "rotation"      : ((node, c) => {node.rotation =    new X3D.SFRotation(...c);}),
-            "scale"         : ((node, c) => {node.scale =       new X3D.SFVec3f(...c);})
+            "translation"   : ((node, c) => {node.translation = new this.manifest_render.x3dLib.SFVec3f(...c);}),
+            "rotation"      : ((node, c) => {node.rotation =    new this.manifest_render.x3dLib.SFRotation(...c);}),
+            "scale"         : ((node, c) => {node.scale =       new this.manifest_render.x3dLib.SFVec3f(...c);})
         };
         
         const outerNode = placements.reduce( (accum, placement: Placement) => {
@@ -267,11 +273,11 @@ export class SceneRender {
                 entries.forEach( (entry )=> {
                     const [name, value] = entry;
                     if      (name === "rotation") 
-                        newNode.rotation = new X3D.SFRotation(...value);
+                        newNode.rotation = new this.manifest_render.x3dLib.SFRotation(...value);
                     else if (name === "translation")
-                        newNode.translation = new X3D.SFVec3f(...value);
+                        newNode.translation = new this.manifest_render.x3dLib.SFVec3f(...value);
                     else if (name === "scale")
-                        newNode.scale = new X3D.SFVec3f(...value);
+                        newNode.scale = new this.manifest_render.x3dLib.SFVec3f(...value);
                     else 
                         throw new Error(`SceneRender.addModel : unrecognized Transform field name ${name}`);
                     
@@ -287,83 +293,108 @@ export class SceneRender {
         return;                       
     }
 
-    private addCamera(  container, 
-                        anno : manifesto.Annotation,
-                        body : manifesto.ManifestResource, 
-                        target: manifesto.ManifestResource):void{
+    /*
+    Developer Note Mar 23 2026
+    For code readability this function has been separated into a separate method;
+    but there is a precontract condition that the annotation.body has already been
+    determined to be a camera
+    
+    Developer Note Mar 23 2026
+    The Presentation 4 Spec editors have not clarified what would be the
+    meaning of a Camera with  lookAt property subject to transforms from
+    a SpecificResource wrapping. 
+    */
+
+    private addCamera(  container, anno : manifesto.Annotation):void{
+
+        // precontract check
+        const camera:manifesto.Camera = (():manifesto.Camera => {
+            const test:any = thisOrSource( anno.Body );
+            if (test == null || ! test.isCamera )
+                throw new Error(`SceneRender.addCamera: precontract violation: not a camera`);
+            return test as manifesto.Camera;
+        })();
         
-        const net_transforms =  [   ...getTransformsForBody(body),
-                                    ...getTransformsForTarget(target) ];
-        ( (to_console:bool) => {
-            const items:string[] = net_transforms.map((item) => item.toString());
-            const msg:string = `SceneRender.addModel net_transforms: ${items.join()}`;
-            if (to_console) console.debug(msg);
-        })(true);
-                                    
-        const placements = transformsToPlacements( net_transforms );
-        if (placements.length > 1){
-            console.warn(`invalid transforms for Camera body`);
-        } 
-        const cameraLocation:[number,number,number] = 
-            placements[0]?.translation.x3dTransformFields.translation ?? [0.0,0.0,0.0];
-        console.debug(`cameraLocation ${cameraLocation}`);
-          
-        const camera:manifesto.Camera = thisOrSource(body);     
-        const lookAt =   camera.LookAt;
+        // lookAt vs SpecificResource check
+        if ((anno.Target as any).isSpecificResource && (camera.LookAt != null))
+        {
+            const msg:string = `SceneRender.addCamera | case of lookAt wrapped in SpecificResource not implemented`;
+            throw new Error()
+        }
         
-        const cameraTransform:Rotation  = ( lookAt == null )?
-                this.cameraOrientationFromTransform(placements):
-                this.cameraOrientationFromLookat( cameraLocation, lookAt); 
-        const cameraOrientation: [number,number,number,number] = 
-            cameraTransform.x3dTransformFields.rotation ?? [0.0,0.0,1.0,0.0];
-        console.debug(`cameraOrientation ${cameraOrientation}`);
+        
                 
-        const cameraCenterTransform:Translate = (lookAt == null)?
-            this.centerFromTarget(target):
-            this.centerFromLookat(lookAt);
-        const cameraCenterOfRotation:[number,number,number] =
-            cameraCenterTransform.x3dTransformFields.translation ?? [0.0,0.0,0.0];
-        console.debug(`cameraCenterOfRotation ${cameraCenterOfRotation}`);
+        const camera_placement:Placement = ( () => {
+            const placements =  transformsToPlacements(
+                [   ...getTransformsForBody(anno.Body),
+                    ...getTransformsForTarget(anno.Target) ]);
+            if (placements.length > 1){
+                console.warn(`invalid transforms for Camera body`);
+            }
+            return placements[0];
+        })();                   
         
-        const cameraNode = this.buildCameraNode( camera);
-        cameraNode.orientation = new X3D.SFRotation(...cameraOrientation);
-        cameraNode.position = new X3D.SFVec3f(...cameraLocation);
-        cameraNode.centerOfRotation = new X3D.SFVec3f( ...cameraCenterOfRotation);
+        
+        const cameraLocation : Translation  =   camera_placement.translation;
+            
+        const cameraOrientation: Rotation = ( ():Rotation => {
+            const lookAt = camera.LookAt;
+            if (lookAt == null){
+                return camera_placement.rotation;
+            }
+            if ((lookAt as any).isPointSelector){
+                const lookAtLocation:Translation = 
+                Transform.from_point_selector( lookAt as manifesto.PointSelector);
+                
+                const tmp:Rotation|null = relativeRotation(cameraLocation, lookAtLocation);
+                if (tmp == null){
+                    const msg=`SceneRender.addCamera | unable to determine relative rotation`;
+                    throw new Error(msg);
+                }
+                return tmp as Rotation;
+            }
+            const msg = `SceneRender.addCamera | unsupported lookAt resource`;
+            throw new Error(msg);
+        })();
+        
+        const cameraCenter:Translation = ( () => {
+            const lookAt = camera.LookAt;
+            if (lookAt == null){
+                const placements =  
+                    transformsToPlacements(getTransformsForTarget(anno.Target));
+                if (placements.length > 1){
+                    console.warn(`invalid transforms for Camera body`);
+                }
+                return placements[0].translation;
+            }
+            if ((lookAt as any).isPointSelector){
+                return Transform.from_point_selector( lookAt as manifesto.PointSelector);
+            }
+            const msg = `SceneRender.addCamera | unsupported lookAt resource`;
+            throw new Error(msg);
+        })();
+        
+        const cameraNode = (() => {
+            if (camera.isPerspectiveCamera){
+                let retVal = this.createNode("Viewpoint");
+                let fov = camera.FieldOfView ?? 45.0;
+                let fov_rad = MathUtils.degToRad( fov );
+                retVal.fieldOfView = new this.manifest_render.x3dLib.SFFloat(fov_rad);
+                return retVal;
+            }
+            throw new Error(`SceneRender.buildCameraNode unsupported camera`);       
+        })();
+        
+        cameraNode.orientation = new this.manifest_render.x3dLib.SFRotation(
+            ...cameraOrientation.x3dTransformFields["rotation"]);
+        
+        cameraNode.position = new this.manifest_render.x3dLib.SFVec3f(
+            ...cameraLocation.x3dTransformFields["translation"]);
+        
+        cameraNode.centerOfRotation = new this.manifest_render.x3dLib.SFVec3f( 
+            ...cameraCenter.x3dTransformFields["translation"]);
+        
         container.push( cameraNode );
         return;
-    }
-       
-    private cameraOrientationFromTransform(placements: Placement[]):Rotation {
-        return placements[0]?.rotation ?? new Rotation( new Quaternion());
-    }
-    
-    private cameraOrientationFromLookat( cameraLocation, lookAt):Rotation {
-        throw new Error("SceneRender.cameraOrientationFromLookat unimplemented");
-    }
-    
-    private buildCameraNode( camera ){
-        if (camera.isPerspectiveCamera){
-            let retVal = this.createNode("Viewpoint");
-            let fov = camera.FieldOfView ?? 45.0;
-            let fov_rad = MathUtils.degToRad( fov );
-            retVal.fieldOfView = new X3D.SFFloat(fov_rad);
-            return retVal;
-        }
-        throw new Error(`SceneRender.buildCameraNode unsupported camera`);
-    };
-    
-    private centerFromTarget(target){
-        const placements = transformsToPlacements(getTransformsForTarget(target));
-        if (placements.length == 0) return new Translation(new Vector3());
-        return placements[0].translation;
-    }
-    
-    private centerFromLookat(lookat){
-        throw new Error(`SceneRender.centerFromLookat not implemented`);
-    }
-    
-    private chooseBody( resources : manifesto.ManifestResource[] ): ManifestResource | null {
-        if (resources.length == 0) return null;
-        return resources[0];
     }
 }
