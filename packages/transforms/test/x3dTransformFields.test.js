@@ -1,8 +1,8 @@
 import {expect} from "chai";
 
-
-import {S,R,T,Vector3} from "./support.js";
-import {Transform, Placement, transformsToPlacements} from "../dist-commonjs/index.js"
+import {Transform, transformsToPlacements, Placement} from  "@kshell/transforms";
+import {S,R,T} from "./setup/build_manifesto_transform.js";
+import {Vector3} from "threejs-math";
 
 
 describe("x3dTransformFields", function(){

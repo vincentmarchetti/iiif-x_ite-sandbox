@@ -1,8 +1,8 @@
 import {expect} from "chai";
 
-
-import {S,R,T,Vector3} from "./support.js";
-import {Transform, transformsToPlacements} from "../dist-commonjs/index.js"
+import {Transform, transformsToPlacements} from  "@kshell/transforms";
+import {S,R,T} from "./setup/build_manifesto_transform.js";
+import {Vector3} from "threejs-math";
 
 function applyListToVector3(operatorList, vect){
     return operatorList.reduce( function(accum,operator){
@@ -10,11 +10,14 @@ function applyListToVector3(operatorList, vect){
     },
     vect);
 }
+
+/*
 const testCases = [
         [S(1,1,1),R(90,0,0),T(1.0,2.0,3.0)],
         [T(1.0,2.0,3.0),R(90,0,0),S(1,1,1)],
         [T(1.0,2.0,3.0),R(90,0,0),R(0,45.0,0),S(1,1,1)]
     ];
+*/
 
 describe(`transformsToPlacements`, function(){
 
