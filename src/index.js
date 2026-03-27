@@ -1,17 +1,7 @@
-require("ManifestViewer/src/x_ite_viewer_setup.js");
-
-/*
-Developer note 12/17/2025 : manifesto is being brought in here
-for the purpose of allowing the function handle_manifest_json to
-construct an instance of manifesto.Manifest
-
-It is not intended to put manifesto or its contents into global scope
-but for all I know that's an unintended consequence.
-*/
-import * as manifesto  from "manifesto-prezi4/src/index.ts" ;
+import {fetch_manifest_json} from "@kshell/manifest-viewer";
+import * as manifesto  from "@kshell/manifesto-prezi4" ;
 
 
-import {fetch_manifest_json} from "ManifestViewer/src/fetch_manifest_json.ts";
 
 /*
     handle_manifest_json is called when an object has
