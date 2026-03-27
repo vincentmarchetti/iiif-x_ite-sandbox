@@ -1,16 +1,16 @@
 import * as manifesto from "@kshell/manifesto-prezi4";
 import {SceneRender, SceneHooks } from "./SceneRender.js";
 
+
 export interface IManifestRender{
     browser : any;
     manifest : manifesto.Manifest;
     x3dLib   : any;
 }
-export class Manifest3DViewer implements IManifestRender {
+export class Manifest3DViewer {
 
     public readonly browser : any ;
     public x3dLib: any ;
-    manifest : manifesto.Manifest;
     
     public set showAllButton( button:HTMLElement){
         if (button === null){
@@ -51,7 +51,7 @@ export class Manifest3DViewer implements IManifestRender {
         /*
         logic is that the first scene will be displayed
         */
-        this.manifest = manifest;
+        
         const scene  : manifesto.Scene   = (manifest as any).Items.filter( (res) => res.isScene )[0];       
         if (scene == null){
             console.warn("manifest with no Scene resources");
@@ -71,8 +71,13 @@ export class Manifest3DViewer implements IManifestRender {
     */
     private async renderScene(  scene: manifesto.Scene, 
                                 manifest: manifesto.Manifest){
-        this.manifest = manifest;
-        const scene_handle = new SceneRender(scene, this as IManifestRender);
+        const props : IManifestRender = {
+            "manifest" : manifest,
+            "browser"  : this.browser,
+            "x3dLib"   : this.x3dLib
+        };
+
+        const scene_handle = new SceneRender(scene, props);
         const hooks:SceneHooks =  await scene_handle.render();
     };
 }
