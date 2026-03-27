@@ -207,28 +207,33 @@ export class SceneRender {
     
     private addAnnotation(container, anno:manifesto.Annotation):void {
         console.debug(`enter SceneRender.addAnnotation ${anno.id}`);
-        
-        const body:manifesto.JSONLDResource = ( ():manifesto.JSONLDResource =>{
-            const rv: manifesto.JSONLDResource | null = anno.Body;
-            if (rv == null){
-                const msg = `SceneRender.addAnnotation | no body property`;
-                throw new Error(msg);
-            }
-            return rv as manifesto.JSONLDResource
-        })();
-        
-        const bodySource:manifesto.ManifestResource = thisOrSource(body);
-        const target = anno.Target;
-        
-        //if (bodySource instanceof manifesto.Model)
-        if ((bodySource as any).isModel )
-            return this.addModel(container, anno);
-
-        if ((bodySource as any).isCamera )
-            return this.addCamera(container, anno);
+        try{
+            const body:manifesto.JSONLDResource = ( ():manifesto.JSONLDResource =>{
+                const rv: manifesto.JSONLDResource | null = anno.Body;
+                if (rv == null){
+                    const msg = `SceneRender.addAnnotation | no body property`;
+                    throw new Error(msg);
+                }
+                return rv as manifesto.JSONLDResource
+            })();
             
-        console.warn(`unsupported body type`);
-        return;
+            const bodySource:manifesto.ManifestResource = thisOrSource(body);
+            const target = anno.Target;
+            
+            //if (bodySource instanceof manifesto.Model)
+            if ((bodySource as any).isModel )
+                return this.addModel(container, anno);
+    
+            if ((bodySource as any).isCamera )
+                return this.addCamera(container, anno);
+                
+            console.warn(`unsupported body type`);
+            return;
+        } catch(error) {
+            const msg = `SceneRender.addAnnotation : failed with ${error}`;
+            console.error(msg);
+            return;
+        }
     }
     
     /*
