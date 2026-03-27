@@ -1,4 +1,4 @@
-import {fetch_manifest_json} from "@kshell/manifest-viewer";
+import {fetch_manifest_json, initialize_x_ite_viewer} from "@kshell/manifest-viewer";
 import * as manifesto  from "@kshell/manifesto-prezi4" ;
 
 
@@ -33,7 +33,7 @@ async function load_manifest(){
     })();
     
     if (data != null){
-        const manifest = new manifesto.Manifest(data, {});
+        const manifest = manifesto.buildManifest(data, {});
         document.dispatchEvent( new CustomEvent("new_manifest", { "detail" : {"manifest" : manifest }}) );
     } else {
         console.error(`load_manifest: no url provided to load`);
@@ -43,5 +43,11 @@ async function load_manifest(){
 
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // first check that the X3D object is defined in this global scope, have
+    // been loaded with the x_ite library
+    if (X3D === undefined){
+        throw new Error(`DOMContentLoaded hander: X3D undefined`);
+    }
+    initialize_x_ite_viewer(X3D);
     await load_manifest();
 })
