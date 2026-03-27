@@ -11,10 +11,11 @@
     "clean": "rimraf --verbose dist .parcel-cache"
   },
   "dependencies": {
-    "@kshell/manifesto-prezi4" :    "file:./packages/manifesto-prezi4",
-    "@kshell/manifest-viewer"  :    "file:./packages/ManifestViewer",
-    "@kshell/transforms"       :    "file:./packages/transforms",
-    "threejs-math"             :    "^0.147.0"
+    "@kshell/manifest-viewer": "file:./packages/ManifestViewer",
+    "@kshell/manifesto-prezi4": "file:./packages/manifesto-prezi4",
+    "@kshell/transforms": "file:./packages/transforms",
+    "threejs-math": "^0.147.0",
+    "x_ite": "12.1.8"
   },
   "devDependencies": {
     "parcel": "^2.16.4",
