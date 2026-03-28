@@ -4,8 +4,28 @@ import {Transform, transformsToPlacements, Placement} from  "@kshell/transforms"
 import {S,R,T} from "./setup/build_manifesto_transform.js";
 import {Vector3} from "threejs-math";
 
+describe('x3dArgs property test', function(){
 
-describe("x3dTransformFields", function(){
+    [
+        [ R(0, 75, 15 ),  [0.12867778, 0.97740474, 0.16769614, 1.33113625]] ,
+    ].forEach(function(tc){
+        const [testCase,exactValue] = tc;
+        it(`test ${testCase}`, function(){
+            /* developer note Mar 28 2026
+            Because the Axis Angle representation is not unique, this simple
+            testing may give false failures; a more robust test for Rotations 
+            will to construct the Quaternion representation of both the
+            exactValue and compare the difference in Quaternion rotations to
+            be small
+            */
+            const transform = Transform.from_manifesto_transform(testCase);
+            expect(transform.x3dArgs).to.exist;
+            expect(transform.x3dArgs).to.almost.deep.equal(exactValue);
+        });
+    });
+});
+
+describe.skip("x3dTransformFields are deprecated", function(){
     it("empty object test", function(){
         const placement = new Placement();
         const fields = placement.x3dTransformFields;
