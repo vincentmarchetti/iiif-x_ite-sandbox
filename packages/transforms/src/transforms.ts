@@ -52,7 +52,8 @@ export abstract class Transform{
     
     abstract applyToPlacement(placement : Placement ):Placement;
     
-
+    abstract get x3dArgs():number[];
+    
     abstract get x3dTransformFields():Record<string,number[]>;
 }
 
@@ -83,6 +84,13 @@ export class Translation extends Transform {
     applyToPlacement( placement:Placement):Placement{
         const translation = new Translation(this.applyToVector3(placement.translation.vect));
         return new Placement(placement.scaling, placement.rotation, translation);
+    }
+    
+    /*
+    Returns the 3 values for the coordinates in an SFVecf node
+    */
+    get x3dArgs():[number,number,number]{
+        return [this.vect.x, this.vect.y,this.vect.z];
     }
     
     get x3dTransformFields():Record<string,number[]>  {
@@ -135,6 +143,15 @@ export class Rotation extends Transform{
         return Math.abs(angle) <= tolerance;
     }
     
+    /*
+        returns 4 numeric values for definging SFRotation node as
+        an axis-angle, angle in radians
+    */
+    get x3dArgs():[number, number, number, number] {
+        const [axis, angle ]:[Vector3, number] =  Rotation.AxisAngle(this.quat);
+         return [ axis.x, axis.y, axis.z , angle ];
+    }
+
     get x3dTransformFields():Record<string,number[]>  {
         const [axis, angle ]:[Vector3, number] =  Rotation.AxisAngle(this.quat);
     
@@ -276,6 +293,13 @@ export class Scaling extends Transform{
         return new Placement(scaling, rotation, translation);
     } 
     
+    /*
+    Returns the 3 values for the coordinates in an SFVecf node
+    */
+    get x3dArgs():[number,number,number]{
+        return this.scales
+    }
+
     get x3dTransformFields():Record<string,number[]>{
         if (this.isIdentity(1.0e-6))
             return {} as Record<string,number[]>;
