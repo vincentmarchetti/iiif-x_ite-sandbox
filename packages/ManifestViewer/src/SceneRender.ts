@@ -8,6 +8,10 @@ import {Transform,
         relativeRotation } from "@kshell/transforms";
 
 import {Quaternion, Vector3, MathUtils} from "threejs-math";
+import type X3D from "x_ite";
+
+type WrappedInline = X3D.ConcreteNodeTypes["Transform"] | X3D.ConcreteNodeTypes["Inline"];
+type ColorType = [number,number,number];
 
 // Developer Note: Jan 13 2026, import of render_stub_content is strictly a 
 // development feature, not relevant to production level
@@ -99,12 +103,8 @@ export class SceneRender {
     private manifest_render : IManifestRender;
     private scene_properties : manifesto.Scene;
     
-    private readonly defaultBackground = {
-        red: 236,
-        green: 236,
-        blue: 236
-    };
-    
+    // a default color for background in X3D color convention, 0 is black, 1.0 is white 
+    private readonly defaultBackground : [number, number, number]= [0.925,0.925,0.925];    
     
     private hooks: SceneHooks = {
         NavigationInfo: null
@@ -147,7 +147,8 @@ export class SceneRender {
         Calling it scene_x to avoid confusion with this.scene, the static IIIF resource
         as represented in manifesto
         */
-        this.scene_x3d =  await this.manifest_render.browser.createScene();
+        const profile:X3D.ProfileInfo = this.manifest_render.browser.getProfile("Full");
+        this.scene_x3d =  await this.manifest_render.browser.createScene(profile);
         
         this.addNavigationInfo(  this.scene_x3d.rootNodes );
         this.addDefaultLighting( this.scene_x3d.rootNodes );
@@ -172,14 +173,19 @@ export class SceneRender {
     }
     
     private addBackground(container):void {
-        const rgb = this.scene_properties.BackgroundColor ?? this.defaultBackground;
+        // rgb is the array of rgb values in [0.0..1.0] interval
+        const rgb= (():ColorType => {
+            const c : manifesto.Color | null = this.scene_properties.BackgroundColor;
+            if (c == null) return this.defaultBackground;
+            
+            return ([c.red, c.green, c.blue]
+                    .map( (v):number => Math.min(Math.round(v/0.255)*0.001, 1.0))) as ColorType;
+        })();
                                 
-        // convert red, green, blue values of rgn to 
-        // floats in range [0.0,1.0]
-        const values:number[] = [rgb.red, rgb.green, rgb.blue]
-                                .map( (v) => Math.min(Math.round(v/0.255)*0.001, 1.0));
         const backGround = this.createNode("Background");
-        backGround.skyColor = new this.manifest_render.x3dLib.MFColor(new this.manifest_render.x3dLib.SFColor(...values));
+        backGround.skyColor = new this.manifest_render.x3dLib.MFColor(
+            new this.manifest_render.x3dLib.SFColor(...rgb)
+        );
         container.push(backGround);
     }
     
@@ -192,10 +198,11 @@ export class SceneRender {
     }
     
     private addDefaultLighting(container):void {
-        const directionData = [ [0.0 , -0.81649658, -0.57735027] ,
-                                [-0.5, -0.81649658,  0.28867513],
-                                [+0.5, -0.81649658,  0.28867513]];
-        directionData.forEach( (vec) => {
+        const directionData : AxesValues[] 
+            =   [ [0.0 , -0.81649658, -0.57735027] ,
+                [-0.5, -0.81649658,  0.28867513],
+                [+0.5, -0.81649658,  0.28867513]];
+        directionData.forEach( (vec:AxesValues) => {
             const light = this.createNode("DirectionalLight");
             light.direction = new this.manifest_render.x3dLib.SFVec3f(...vec);
             light.global =    new this.manifest_render.x3dLib.SFBool(true);
@@ -255,44 +262,19 @@ export class SceneRender {
         console.debug(`adding model ${model.id}`);
         
         const inline = this.createNode("Inline");
-        inline.url = new this.manifest_render.x3dLib.MFString([ model.id ]);
+        inline.url = new this.manifest_render.x3dLib.MFString( model.id );
             
         const net_transforms =  [   ...TransformsForBody(anno.Body),
                                     TranslationForTarget(anno.Target) ];
-                                    
+                                      
         const placements = transformsToPlacements( net_transforms );
-        
-        const setTransformNodeField = {
-            "translation"   : ((node, c) => {node.translation = new this.manifest_render.x3dLib.SFVec3f(...c);}),
-            "rotation"      : ((node, c) => {node.rotation =    new this.manifest_render.x3dLib.SFRotation(...c);}),
-            "scale"         : ((node, c) => {node.scale =       new this.manifest_render.x3dLib.SFVec3f(...c);})
-        };
-        
-        const outerNode = placements.reduce( (accum, placement: Placement) => {
-            const x3dFields:Record<string,number[]> = placement.x3dTransformFields;
-            const entries = Object.entries(x3dFields);
-            if (entries.length > 0){
-                const newNode = this.createNode("Transform");
-
-                entries.forEach( (entry )=> {
-                    const [name, value] = entry;
-                    if      (name === "rotation") 
-                        newNode.rotation = new this.manifest_render.x3dLib.SFRotation(...value);
-                    else if (name === "translation")
-                        newNode.translation = new this.manifest_render.x3dLib.SFVec3f(...value);
-                    else if (name === "scale")
-                        newNode.scale = new this.manifest_render.x3dLib.SFVec3f(...value);
-                    else 
-                        throw new Error(`SceneRender.addModel : unrecognized Transform field name ${name}`);
-                    
-                });
                 
+        const outerNode = placements.reduce( (accum: WrappedInline, placement: Placement):WrappedInline => {
+                const newNode = this.createTransformNode(placement);
                 newNode.children.push(accum);
                 return newNode;
-            }
-            return accum;
-        },
-        inline);        
+            }, inline);        
+        
         container.push(outerNode);
         return;                       
     }
@@ -372,16 +354,18 @@ export class SceneRender {
             throw new Error(`SceneRender.buildCameraNode unsupported camera`);       
         })();
         
-        cameraNode.orientation = new this.manifest_render.x3dLib.SFRotation(
-            ...cameraOrientation.x3dTransformFields["rotation"]);
+        cameraNode.orientation = new this.manifest_render.x3dLib.SFRotation(...cameraOrientation.x3dArgs);
         
-        cameraNode.position = new this.manifest_render.x3dLib.SFVec3f(
-            ...cameraLocation.x3dTransformFields["translation"]);
+        cameraNode.position = new this.manifest_render.x3dLib.SFVec3f(...cameraLocation.x3dArgs);
         
-        cameraNode.centerOfRotation = new this.manifest_render.x3dLib.SFVec3f( 
-            ...cameraCenter.x3dTransformFields["translation"]);
+        cameraNode.centerOfRotation = new this.manifest_render.x3dLib.SFVec3f(...cameraCenter.x3dArgs);
         
         container.push( cameraNode );
         return;
+    }
+    
+    createTransformNode(placement : Placement):X3D.ConcreteNodeTypes["Transform"]{
+        const retVal:X3D.ConcreteNodeTypes["Transform"] = this.createNode("Transform");
+        return retVal;
     }
 }

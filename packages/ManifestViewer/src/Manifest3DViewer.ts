@@ -1,11 +1,12 @@
 import * as manifesto from "@kshell/manifesto-prezi4";
 import {SceneRender, SceneHooks } from "./SceneRender.js";
+import type X3D from "x_ite";
 
 
 export interface IManifestRender{
-    browser : any;
-    manifest : manifesto.Manifest;
-    x3dLib   : any;
+    browser :  X3D.X3DBrowser,
+    manifest : manifesto.Manifest,
+    x3dLib   : X3D
 }
 export class Manifest3DViewer {
 
@@ -26,7 +27,7 @@ export class Manifest3DViewer {
 
     
     
-    constructor( x3dLib: any, container : HTMLElement ){
+    constructor( x3dLib: X3D, container : HTMLElement ){
         this.x3dLib = x3dLib;
         const canvas = document.createElement("x3d-canvas");
         container.appendChild(canvas);
