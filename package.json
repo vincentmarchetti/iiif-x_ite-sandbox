@@ -11,9 +11,9 @@
     "clean": "rimraf --verbose dist .parcel-cache"
   },
   "dependencies": {
-    "@kshell/manifest-viewer": "file:./packages/ManifestViewer",
+    "@kshell/manifest-viewer" : "file:./packages/manifest_viewer",
     "@kshell/manifesto-prezi4": "file:./packages/manifesto-prezi4",
-    "@kshell/transforms": "file:./packages/transforms",
+    "@kshell/transforms"      : "file:./packages/x3d_transforms",
     "threejs-math": "^0.147.0",
     "x_ite": "12.1.8"
   },
