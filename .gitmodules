@@ -4,3 +4,6 @@
 [submodule "packages/manifest_viewer"]
 	path = packages/manifest_viewer
 	url = git@github.com:vincentmarchetti/iiif-manifest-viewer.git
+[submodule "packages/x3d_transforms"]
+	path = packages/x3d_transforms
+	url = git@github.com:vincentmarchetti/iiif-x3d-transforms.git
