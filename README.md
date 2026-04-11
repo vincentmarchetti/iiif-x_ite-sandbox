@@ -12,3 +12,24 @@ The 3D rendering will be accomplished by building an X3D conforming scenegraph w
 Links:
 - [IIIF 3D Technical Study Group](https://iiif.io/community/groups/3d/)
 - [X_ITE Viewer](https://create3000.github.io/x_ite/)
+
+
+On initial clone into a local repository
+
+Initialize and checkout the three submodules within
+git submodule init
+git submodule update
+
+optionally, in any or each submodule
+git checkout main
+git pull
+
+
+then in each submodule
+- npm install
+- npm run build
+
+in this order, required for dependencies
+manifesto-prezi4
+x3d_transforms
+manifest-viewer_
