@@ -1,0 +1,129 @@
+{
+  "@context": "http://iiif.io/api/presentation/4/context.json",
+  "id": "https://example.com/iiif_blender_plugin/manifest/1",
+  "type": "Manifest",
+  "rights": "https://creativecommons.org/licenses/by/4.0/",
+  "label": {
+    "none": [
+      "default-manifest-label"
+    ]
+  },
+  "items": [
+    {
+      "id": "https://example.com/iiif_blender_plugin/scene/1",
+      "type": "Scene",
+      "label": {
+        "none": [
+          "default-scene-label"
+        ]
+      },
+      "items": [
+        {
+          "id": "https://example.com/iiif_blender_plugin/annotationpage/1",
+          "type": "AnnotationPage",
+          "label": {
+            "none": [
+              "default-annotation-page-label"
+            ]
+          },
+          "items": [
+            {
+              "id": "https://example.com/iiif_blender_plugin/annotation/1",
+              "type": "Annotation",
+              "motivation": [
+                "painting"
+              ],
+              "target": {
+                "id": "https://example.com/iiif_blender_plugin/scene/1",
+                "type": "Scene"
+              },
+              "body": {
+                "id": "https://raw.githubusercontent.com/IIIF/3d/main/assets/astronaut/astronaut.glb",
+                "type": "Model",
+                "format": "model/gltf-binary"
+              }
+            },
+            {
+              "id": "https://example.com/iiif_blender_plugin/annotation/2",
+              "type": "Annotation",
+              "motivation": [
+                "painting"
+              ],
+              "target": {
+                "type": "SpecificResource",
+                "source": {
+                  "id": "https://example.com/iiif_blender_plugin/scene/1",
+                  "type": "Scene"
+                },
+                "selector": {
+                  "type": "PointSelector",
+                  "x": -0.21703900396823883,
+                  "y": 2.358583688735962,
+                  "z": 1.237433910369873
+                }
+              },
+              "body": {
+                "type": "SpecificResource",
+                "source": {
+                  "id": "https://raw.githubusercontent.com/IIIF/3d/refs/heads/main/assets/saxophone/saxophone.glb",
+                  "type": "Model",
+                  "format": "model/gltf-binary"
+                },
+                "transform": [
+                  {
+                    "type": "RotateTransform",
+                    "x": 80.91010671926922,
+                    "y": 76.62914905318034,
+                    "z": -63.17131314280239
+                  },
+                  {
+                    "type": "ScaleTransform",
+                    "x": 2.799999952316284,
+                    "y": 2.799999952316284,
+                    "z": 2.799999952316284
+                  }
+                ]
+              }
+            },
+            {
+              "id": "https://example.com/iiif_blender_plugin/annotation/3",
+              "type": "Annotation",
+              "motivation": [
+                "painting"
+              ],
+              "target": {
+                "type": "SpecificResource",
+                "source": {
+                  "id": "https://example.com/iiif_blender_plugin/scene/1",
+                  "type": "Scene"
+                },
+                "selector": {
+                  "type": "PointSelector",
+                  "x": 1.7031829357147217,
+                  "y": 3.501267671585083,
+                  "z": 4.747387886047363
+                }
+              },
+              "body": {
+                "type": "SpecificResource",
+                "source": {
+                  "id": "https://example.com/iiif_blender_plugin/perspectivecamera/1",
+                  "type": "PerspectiveCamera",
+                  "fieldOfView": 35.791465081147024
+                },
+                "transform": [
+                  {
+                    "type": "RotateTransform",
+                    "x": -8.89866164434875,
+                    "y": 20.065529960630236,
+                    "z": 2.0641877544495193
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

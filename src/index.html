@@ -20,9 +20,9 @@
 
 </head>
 <body>
-<div id="main-title">
-Prototype IIIF Manifest Viewer with <a href="https://github.com/create3000/x_ite">X-ITE</a> X3D viewer
-</div>
+<h2>IIIF 3D Manifest Viewer by <a href="https://create3000.github.io/x_ite/">X_ITE</a> X3D Browser</h2>
+<div id="two-columns">
+<div id="left-side">
 
 <div id="xite-view-container"></div>
 
@@ -30,9 +30,28 @@ Prototype IIIF Manifest Viewer with <a href="https://github.com/create3000/x_ite
 <button name="show_all" type="button" id="xite-show-all">Show All</button>
 </div>
 
+<!-- 
 <div id="credits">
-<a href="https://create3000.github.io/x_ite/"><img class="logo-image" id="xite-logo" alt="X_TE logo" src="img/xite_logo.png"></a>
-<a href="https://iiif.io"><img class="logo-image" id="iiif-logo" alt="X-_TE logo" src="img/iiif_logo.png"></a>
+<a href="https://create3000.github.io/x_ite/"><img class="logo-image" id="xite-logo" alt="X_TE logo" src="../../img/xite_logo.png"></a>
+<a href="https://iiif.io"><img class="logo-image" id="iiif-logo" alt="IIIF logo" src="../../img/iiif_logo.png"></a>
+<a href="https://www.web3d.org"><img class="logo-image" id="x3d-logo" alt="X3D logo" src="../../img/X3D_logo_transparent_bg.png"></a>
 </div>
+ -->
+</div> <!-- end left-side div element -->
+
+<div id="right-side"  >
+<textarea id="manifest-text"  >
+<include src="init_textarea.txt"></include>
+</textarea>
+
+<button id="load-manifest-from-text">Load Manifest into Viewer</button>
+
+<div>JSON parsing by <a href="https://github.com/prantlf/jsonlint">jsonlint</a></div>
+
+
+<div id="load-result-message" class="success-parsing"></div>
+
+</div> <!-- end right-side div element -->
+</div> <!-- end two-columns -->
 </body>
 </html>

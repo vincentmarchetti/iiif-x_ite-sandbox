@@ -14,11 +14,13 @@
     "@kshell/manifest-viewer" : "file:./packages/manifest_viewer",
     "@kshell/manifesto-prezi4": "file:./packages/manifesto-prezi4",
     "@kshell/iiif-x3d-transforms"      : "file:./packages/x3d_transforms",
+    "@prantlf/jsonlint": "^17.0.1",
     "threejs-math": "^0.147.0",
     "x_ite": "12.1.8"
   },
   "devDependencies": {
     "parcel": "^2.16.4",
-    "rimraf": "^6.1.3"
+    "rimraf": "^6.1.3",
+    "posthtml-include": "^2.0.1"
   }
 }
