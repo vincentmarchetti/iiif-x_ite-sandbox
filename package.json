@@ -7,8 +7,7 @@
   "source": "src/index.html",
   "scripts": {
     "start": "parcel",
-    
-    "build": "parcel build --public-url /pages/iiif3d/x_ite/sandbox/ --dist-dir public --no-source-maps --no-cache",
+    "build": "parcel build --public-url /pages/iiif3d/x_ite/sandbox/  --dist-dir public  --no-scope-hoist --no-source-maps --no-cache",
     "postbuild" : "git show -s > public/commit.txt",
     
     "clean": "rimraf --verbose dist .parcel-cache public"
