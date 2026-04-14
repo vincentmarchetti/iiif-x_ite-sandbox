@@ -6,9 +6,12 @@
   "type": "module",
   "source": "src/index.html",
   "scripts": {
-    "start": "parcel --open",
-    "build": "parcel build",
-    "clean": "rimraf --verbose dist .parcel-cache"
+    "start": "parcel",
+    
+    "build": "parcel build --public-url /pages/iiif3d/x_ite/sandbox/ --dist-dir public --no-source-maps --no-cache",
+    "postbuild" : "git show -s > public/commit.txt",
+    
+    "clean": "rimraf --verbose dist .parcel-cache public"
   },
   "dependencies": {
     "@kshell/manifest-viewer" : "file:./packages/manifest_viewer",
